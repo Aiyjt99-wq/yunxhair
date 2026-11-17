@@ -1,0 +1,914 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#ffffff">
+<title>理发店会员本</title>
+<style>
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{
+    font:16px/1.5 -apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,sans-serif;
+    background:#f2f3f5;color:#1c1c1e;
+    padding-bottom:calc(74px + env(safe-area-inset-bottom));
+    -webkit-text-size-adjust:100%;
+  }
+  header{
+    position:sticky;top:0;z-index:20;background:#fff;border-bottom:1px solid #e8e8ed;
+    padding:calc(10px + env(safe-area-inset-top)) 16px 10px;
+  }
+  header .row{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+  h1{font-size:18px;margin:0;font-weight:600;letter-spacing:.5px}
+  .today{font-size:12.5px;color:#8e8e93;margin-top:3px;font-variant-numeric:tabular-nums}
+  main{padding:12px 12px 28px;max-width:760px;margin:0 auto}
+  .card{background:#fff;border-radius:14px;padding:14px;margin-bottom:10px;box-shadow:0 1px 2px rgba(0,0,0,.05)}
+  .muted{color:#8e8e93}
+  .small{font-size:13px}
+  .tiny{font-size:12px}
+  .num{font-variant-numeric:tabular-nums}
+
+  /* 提示横幅 */
+  .banner{background:#fff7e6;border:1px solid #ffd591;color:#8a5300;border-radius:12px;padding:10px 12px;font-size:13.5px;margin-bottom:10px;line-height:1.45}
+  .banner b{color:#ad6800}
+
+  /* 搜索 */
+  .search{position:relative;margin-bottom:10px}
+  .search input{
+    width:100%;padding:11px 14px 11px 38px;border-radius:11px;border:1px solid #e2e2e8;background:#fff;
+    font-size:16px;outline:none;
+  }
+  .search input:focus{border-color:#0a7cff;box-shadow:0 0 0 3px rgba(10,124,255,.12)}
+  .search .ico{position:absolute;left:13px;top:50%;transform:translateY(-50%);font-size:15px;color:#b0b0b8}
+
+  /* 会员卡行 */
+  .member{
+    display:block;width:100%;text-align:left;background:#fff;border:0;border-radius:14px;
+    padding:13px 14px;margin:0 0 9px;box-shadow:0 1px 2px rgba(0,0,0,.05);cursor:pointer;
+    font:inherit;color:inherit;
+  }
+  .member:active{background:#f7f7fa}
+  .m-top{display:flex;align-items:center;gap:8px;justify-content:space-between}
+  .m-name{font-size:16.5px;font-weight:600}
+  .m-phone{font-size:12.5px;color:#8e8e93;font-variant-numeric:tabular-nums}
+  .m-mid{display:flex;align-items:flex-end;justify-content:space-between;margin-top:6px;gap:10px}
+  .m-big{font-size:26px;font-weight:700;line-height:1.1;font-variant-numeric:tabular-nums}
+  .m-big small{font-size:12.5px;font-weight:400;color:#8e8e93;margin-left:4px}
+  .m-meta{font-size:12.5px;color:#8e8e93;text-align:right;line-height:1.45;font-variant-numeric:tabular-nums}
+  .pill{display:inline-block;font-size:11.5px;padding:2px 8px;border-radius:20px;font-weight:600;white-space:nowrap}
+  .pill.ok{background:#e8f7ee;color:#0d7a3e}
+  .pill.low{background:#fff3e0;color:#b25e00}
+  .pill.empty{background:#fdecec;color:#c62828}
+  .pill.expired{background:#f0f0f5;color:#6b6b76}
+  .pill.none{background:#eef4ff;color:#0a58c9}
+
+  /* 按钮 */
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:6px;
+    border:0;border-radius:11px;padding:11px 16px;font:inherit;font-weight:600;font-size:15px;
+    cursor:pointer;text-decoration:none;
+  }
+  .btn:active{opacity:.82}
+  .btn.primary{background:#0a7cff;color:#fff}
+  .btn.green{background:#12a150;color:#fff}
+  .btn.ghost{background:#eef0f4;color:#1c1c1e}
+  .btn.danger{background:#fdecec;color:#c62828}
+  .btn.block{width:100%}
+  .btn.big{padding:16px;font-size:17px;border-radius:13px}
+  .btn-row{display:flex;gap:10px}
+  .btn-row .btn{flex:1}
+  .linkbtn{background:none;border:0;color:#0a7cff;font:inherit;font-size:14px;padding:8px 4px;cursor:pointer}
+
+  /* 明细列表 */
+  .rec{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #f0f0f4}
+  .rec:last-child{border-bottom:0}
+  .rec .ic{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;flex:0 0 32px}
+  .rec .ic.in{background:#e8f7ee}
+  .rec .ic.out{background:#eef4ff}
+  .rec .body{flex:1;min-width:0}
+  .rec .t1{font-size:14.5px;font-weight:500}
+  .rec .t2{font-size:12px;color:#8e8e93;font-variant-numeric:tabular-nums}
+  .rec .amt{font-size:15px;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .rec .amt.in{color:#0d7a3e}
+  .rec .amt.out{color:#0a58c9}
+  .delrec{border:0;background:none;color:#c7c7cc;font-size:16px;padding:6px;cursor:pointer}
+
+  .daygroup{margin-bottom:6px}
+  .dayhead{font-size:12.5px;color:#8e8e93;font-weight:600;padding:10px 4px 6px;display:flex;justify-content:space-between}
+
+  /* 统计 */
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .stat{background:#fff;border-radius:14px;padding:14px;box-shadow:0 1px 2px rgba(0,0,0,.05)}
+  .stat .k{font-size:12.5px;color:#8e8e93}
+  .stat .v{font-size:24px;font-weight:700;margin-top:4px;font-variant-numeric:tabular-nums}
+  .stat .v small{font-size:13px;font-weight:400;color:#8e8e93;margin-left:2px}
+
+  /* 底部导航 */
+  nav{
+    position:fixed;left:0;right:0;bottom:0;z-index:30;display:flex;background:rgba(255,255,255,.96);
+    backdrop-filter:saturate(180%) blur(12px);-webkit-backdrop-filter:saturate(180%) blur(12px);
+    border-top:1px solid #e8e8ed;padding-bottom:env(safe-area-inset-bottom);
+  }
+  nav button{
+    flex:1;border:0;background:none;padding:8px 0 7px;font-size:11px;color:#8e8e93;
+    display:flex;flex-direction:column;align-items:center;gap:2px;font-family:inherit;cursor:pointer;
+  }
+  nav button.on{color:#0a7cff}
+  nav button.on .ic{transform:scale(1.06)}
+  nav .ic{font-size:19px;line-height:1}
+
+  /* 弹层 */
+  .overlay{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.42);display:flex;align-items:flex-end;justify-content:center}
+  .sheet{
+    width:100%;max-width:560px;background:#fff;border-radius:18px 18px 0 0;
+    padding:16px 16px calc(18px + env(safe-area-inset-bottom));max-height:92vh;overflow:auto;
+    animation:up .18s ease-out;
+  }
+  @keyframes up{from{transform:translateY(14px);opacity:.6}to{transform:none;opacity:1}}
+  .sheet h2{font-size:17px;margin:0 0 12px;font-weight:600}
+  .field{margin-bottom:12px}
+  .field label{display:block;font-size:13px;color:#6b6b76;margin-bottom:5px}
+  .field input,.field textarea{
+    width:100%;padding:11px 12px;border:1px solid #e2e2e8;border-radius:10px;font-size:16px;
+    font-family:inherit;outline:none;background:#fbfbfd;
+  }
+  .field input:focus,.field textarea:focus{border-color:#0a7cff;background:#fff;box-shadow:0 0 0 3px rgba(10,124,255,.12)}
+  .field .hint{font-size:12px;color:#9a9aa2;margin-top:5px}
+  .field-2{display:flex;gap:10px}
+  .field-2>.field{flex:1}
+  .sheet .actions{display:flex;gap:10px;margin-top:6px}
+  .sheet .actions .btn{flex:1}
+  textarea{resize:vertical}
+
+  .empty{text-align:center;color:#9a9aa2;padding:40px 12px;font-size:14px;line-height:1.7}
+  .empty .em{font-size:34px;display:block;margin-bottom:8px;opacity:.5}
+  .sep{height:1px;background:#f0f0f4;margin:12px 0}
+  .kv{display:flex;justify-content:space-between;padding:7px 0;font-size:14.5px}
+  .kv span:first-child{color:#6b6b76}
+  .kv span:last-child{font-variant-numeric:tabular-nums}
+
+  /* 兜底：脚本没跑起来时显示的说明（正常情况下会被隐藏） */
+  #fallback{position:fixed;inset:0;z-index:900;background:#f2f3f5;display:flex;align-items:center;justify-content:center;padding:24px}
+  #fallback .fb-card{background:#fff;border-radius:16px;padding:22px;max-width:420px;box-shadow:0 4px 20px rgba(0,0,0,.08)}
+  #fallback .fb-title{font-size:19px;font-weight:700;margin-bottom:6px}
+  #fallback .fb-sub{font-size:13.5px;color:#8e8e93;margin-bottom:14px}
+  #fallback .fb-tip{font-size:14px;line-height:1.75;color:#3a3a3c}
+  #fallback .fb-tip b{color:#a11}
+  #fallback .fb-dots:after{content:'…';display:inline-block;animation:dots 1.2s steps(4,end) infinite;width:1em;text-align:left}
+  @keyframes dots{0%{content:''}25%{content:'.'}50%{content:'..'}75%{content:'...'}}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<div id="fallback">
+  <div class="fb-card">
+    <div class="fb-title">理发店会员本</div>
+    <div class="fb-sub fb-dots">正在加载</div>
+    <div class="fb-tip">
+      如果这行字停留超过 3 秒，说明<b>当前打开方式只显示网页、不执行 JavaScript</b>，
+      记账界面就出不来（你看到的白屏就是这个原因）。<br><br>
+      请改用电脑上的 <b>Chrome / Edge / Safari</b> 打开这个文件（双击即可），
+      或者把这个文件发到微信「文件传输助手」，在电脑上另存后打开。
+    </div>
+  </div>
+</div>
+<noscript>
+  <div style="position:fixed;inset:0;z-index:950;background:#fff;padding:24px;font-size:14px;line-height:1.8">
+    这个页面需要 JavaScript 才能显示。请用浏览器打开（电脑上双击文件即可）。
+  </div>
+</noscript>
+<script>
+'use strict';
+
+/* ============ 一、基础工具 ============ */
+var KEY = 'hairshop.v1';
+
+function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+function pad2(n){ return (n < 10 ? '0' : '') + n; }
+function todayStr(){
+  var d = new Date();
+  return d.getFullYear() + '-' + pad2(d.getMonth()+1) + '-' + pad2(d.getDate());
+}
+function esc(s){
+  return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+  });
+}
+function money(n){
+  n = Number(n) || 0;
+  var r = Math.round(n * 100) / 100;
+  return (r % 1 === 0) ? String(r) : r.toFixed(2);
+}
+function addYears(dateStr, y){
+  var p = dateStr.split('-');
+  return (Number(p[0]) + y) + '-' + p[1] + '-' + p[2];
+}
+function daysBetween(a, b){   /* b - a，单位天 */
+  var da = new Date(a + 'T00:00:00'), db = new Date(b + 'T00:00:00');
+  return Math.round((db - da) / 86400000);
+}
+function weekdayName(ds){
+  var d = new Date(ds + 'T00:00:00');
+  var w = ['周日','周一','周二','周三','周四','周五','周六'][d.getDay()];
+  return ds + ' ' + w;
+}
+/* 金额/次数输入清洗 */
+function num(v){
+  var n = parseFloat(String(v).replace(/[^\d.\-]/g, ''));
+  return isNaN(n) ? 0 : n;
+}
+function intNum(v){
+  var n = parseInt(String(v).replace(/[^\d\-]/g, ''), 10);
+  return isNaN(n) ? 0 : n;
+}
+
+/* ============ 二、数据层 ============ */
+/* 数据结构：
+   customers: [{id,name,phone,note,createdAt}]
+   records:   [{id,cid,type:'recharge'|'use',count,amount,date,expireDate,note,ts}]
+   —— 剩余次数/累计充值/到期日 全部由 records 推导，不存冗余字段，永远算不错账。
+*/
+var state = load();
+
+/* 检测当前环境能否真的存数据（有的预览器/无痕模式会禁用 localStorage） */
+var storageOK = (function(){
+  try{ localStorage.setItem('__probe__','1'); localStorage.removeItem('__probe__'); return true; }
+  catch(e){ return false; }
+})();
+
+function load(){
+  try{
+    var raw = localStorage.getItem(KEY);
+    if(raw){
+      var s = JSON.parse(raw);
+      if(s && Array.isArray(s.customers) && Array.isArray(s.records)) return s;
+    }
+  }catch(e){}
+  return { customers: [], records: [] };
+}
+function save(){
+  try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){}
+}
+function recsOf(cid){
+  return state.records.filter(function(r){ return r.cid === cid; });
+}
+function findCustomer(id){
+  for(var i=0;i<state.customers.length;i++){
+    if(state.customers[i].id === id) return state.customers[i];
+  }
+  return null;
+}
+/* 单个会员的完整汇总 */
+function summarize(c){
+  var rs = recsOf(c.id);
+  var total = 0, used = 0, amount = 0, expire = '', last = '', lastRecharge = '';
+  for(var i=0;i<rs.length;i++){
+    var r = rs[i];
+    if(r.type === 'recharge'){
+      total += (Number(r.count) || 0);
+      amount += (Number(r.amount) || 0);
+      if(r.expireDate && r.expireDate > expire) expire = r.expireDate;
+      if(r.date > lastRecharge) lastRecharge = r.date;
+    }else if(r.type === 'use'){
+      used += (Number(r.count) || 0);
+    }
+    if(r.date > last) last = r.date;
+  }
+  var remain = total - used;
+  var t = todayStr();
+  var status;
+  if(total === 0) status = 'none';
+  else if(expire && expire < t) status = 'expired';
+  else if(remain <= 0) status = 'empty';
+  else if(remain <= 2) status = 'low';
+  else status = 'ok';
+  return {
+    id: c.id, name: c.name, phone: c.phone, note: c.note,
+    total: total, used: used, remain: remain, amount: amount,
+    expire: expire, last: last, lastRecharge: lastRecharge,
+    status: status, count: rs.length,
+    sortKey: last || (c.createdAt || '').slice(0,10) || ''
+  };
+}
+function allMembers(){
+  return state.customers.map(summarize);
+}
+function statusLabel(s){
+  return {ok:'正常', low:'快用完', empty:'已用完', expired:'已过期', none:'未开卡'}[s] || '';
+}
+function statusText(ms){
+  var t = todayStr();
+  if(ms.status === 'none') return '还没充值过';
+  if(ms.status === 'expired'){
+    var d = daysBetween(ms.expire, t);
+    return '卡已过期 ' + d + ' 天（剩 ' + ms.remain + ' 次）';
+  }
+  if(ms.status === 'empty') return '次数已用完，该提醒续卡了';
+  if(ms.status === 'low') return '只剩 ' + ms.remain + ' 次';
+  if(ms.expire){
+    var left = daysBetween(t, ms.expire);
+    if(left <= 30) return left + ' 天后到期（剩 ' + ms.remain + ' 次）';
+  }
+  return '剩 ' + ms.remain + ' 次';
+}
+
+/* ============ 三、界面状态 ============ */
+var ui = { tab: 'members', q: '', openId: null, modal: null };
+
+/* ============ 四、视图 ============ */
+function topBar(){
+  var st = stats();
+  return '<header>' +
+    '<div class="row"><h1>' + (ui.openId ? '会员详情' : '理发店会员本') + '</h1>' +
+    (ui.openId ? '<button class="linkbtn" data-act="back">返回</button>' :
+      '<button class="linkbtn" data-act="add">+ 新会员</button>') +
+    '</div>' +
+    '<div class="today num">今天 ' + weekdayName(todayStr()) +
+      ' · 今日充值 ' + money(st.todayRecharge) + ' 元 · 今日剪发 ' + st.todayUse + ' 次</div>' +
+  '</header>';
+}
+
+function membersView(){
+  var list = allMembers();
+  var k = ui.q.trim().toLowerCase();
+  if(k){
+    list = list.filter(function(m){
+      return (m.name||'').toLowerCase().indexOf(k) >= 0 || (m.phone||'').indexOf(k) >= 0;
+    });
+  }
+  list.sort(function(a,b){ return a.sortKey < b.sortKey ? 1 : a.sortKey > b.sortKey ? -1 : 0; });
+
+  var h = '';
+  /* 提醒横幅 */
+  var ms = allMembers();
+  var warn = ms.filter(function(m){ return m.status === 'low' || m.status === 'empty' || m.status === 'expired'; });
+  if(warn.length){
+    var expired = warn.filter(function(m){ return m.status === 'expired'; }).length;
+    var out = warn.filter(function(m){ return m.status === 'empty' || m.status === 'low'; }).length;
+    h += '<div class="banner"><b>要提醒的客户 ' + warn.length + ' 位</b>：' +
+      (out ? '次数快用完/已用完 ' + out + ' 位' : '') +
+      (out && expired ? '，' : '') +
+      (expired ? '已过期 ' + expired + ' 位' : '') + '</div>';
+  }
+
+  h += '<div class="search"><span class="ico">🔍</span>' +
+       '<input id="q" type="search" placeholder="搜姓名或手机号" value="' + esc(ui.q) + '"></div>';
+
+  if(!list.length){
+    h += '<div class="empty"><span class="em">💇</span>' +
+      (state.customers.length ? '没找到匹配的客户' : '还没有客户。<br>点右上角「+ 新会员」开第一张卡。') +
+      '</div>';
+    return h;
+  }
+
+  list.forEach(function(m){
+    h += '<button class="member" data-act="open" data-id="' + m.id + '">' +
+      '<div class="m-top">' +
+        '<span class="m-name">' + esc(m.name) + (m.phone ? ' <span class="m-phone">' + esc(m.phone) + '</span>' : '') + '</span>' +
+        '<span class="pill ' + m.status + '">' + statusLabel(m.status) + '</span>' +
+      '</div>' +
+      '<div class="m-mid">' +
+        '<div class="m-big num">' + (m.status === 'none' ? '—' : m.remain) + '<small>' + (m.status === 'none' ? '' : '次可用') + '</small></div>' +
+        '<div class="m-meta">共 ' + m.total + ' 次 · 充值 ' + money(m.amount) + ' 元' +
+          (m.expire ? '<br>到期 ' + m.expire : '') + '</div>' +
+      '</div>' +
+    '</button>';
+  });
+  return h;
+}
+
+function detailView(){
+  var c = findCustomer(ui.openId);
+  if(!c){ ui.openId = null; return membersView(); }
+  var m = summarize(c);
+  var h = '';
+
+  h += '<div class="card">' +
+    '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">' +
+      '<div><div style="font-size:20px;font-weight:700">' + esc(m.name) + '</div>' +
+      (m.phone ? '<div class="small muted num">' + esc(m.phone) + '</div>' : '') +
+      (m.note ? '<div class="tiny muted" style="margin-top:4px">' + esc(m.note) + '</div>' : '') +
+      '</div>' +
+      '<span class="pill ' + m.status + '">' + statusLabel(m.status) + '</span>' +
+    '</div>' +
+    '<div class="sep"></div>' +
+    '<div style="text-align:center;padding:4px 0 10px">' +
+      '<div class="num" style="font-size:44px;font-weight:800;line-height:1.05;color:' + (m.remain > 0 ? '#12a150' : '#c62828') + '">' +
+        m.remain + '<span style="font-size:14px;font-weight:500;color:#8e8e93;margin-left:6px">次可用</span></div>' +
+      '<div class="tiny muted" style="margin-top:4px">' + esc(statusText(m)) + '</div>' +
+    '</div>' +
+    '<div class="kv"><span>累计充值</span><span class="num">' + money(m.amount) + ' 元</span></div>' +
+    '<div class="kv"><span>累计次数</span><span class="num">' + m.total + ' 次（已用 ' + m.used + ' 次）</span></div>' +
+    '<div class="kv"><span>到期日期</span><span class="num">' + (m.expire || '—') + '</span></div>' +
+    '<div class="sv kv"><span>开卡日期</span><span class="num">' + (m.lastRecharge || '—') + '</span></div>' +
+  '</div>';
+
+  h += '<div class="btn-row" style="margin-bottom:10px">' +
+    '<button class="btn green big" data-act="use" data-id="' + m.id + '">✂️ 剪一次（-1）</button>' +
+    '<button class="btn primary big" data-act="recharge" data-id="' + m.id + '">💰 充值</button>' +
+  '</div>';
+
+  h += '<div class="card">' +
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px">' +
+      '<b style="font-size:15px">消费记录</b>' +
+      '<span class="tiny muted">' + m.count + ' 条</span>' +
+    '</div>';
+  var rs = recsOf(c.id).slice().sort(function(a,b){
+    if(a.date !== b.date) return a.date < b.date ? 1 : -1;
+    return (b.ts||0) - (a.ts||0);
+  });
+  if(!rs.length){
+    h += '<div class="empty" style="padding:22px 0">还没有记录</div>';
+  }else{
+    rs.forEach(function(r){ h += recRow(r, true); });
+  }
+  h += '</div>';
+
+  h += '<div class="btn-row">' +
+    '<button class="btn ghost" data-act="edit" data-id="' + m.id + '">修改资料</button>' +
+    '<button class="btn danger" data-act="delcus" data-id="' + m.id + '">删除会员</button>' +
+  '</div>';
+  return h;
+}
+
+function recRow(r, withDelete){
+  var isIn = r.type === 'recharge';
+  var c = findCustomer(r.cid);
+  var t1 = isIn ? '充值 ' + money(r.amount) + ' 元 · ' + r.count + ' 次' : '剪发 1 次';
+  if(!isIn && r.count && r.count > 1) t1 = '剪发 ' + r.count + ' 次';
+  var t2 = r.date + (c ? ' · ' + esc(c.name) : '') + (r.expireDate ? ' · 有效期至 ' + r.expireDate : '');
+  return '<div class="rec">' +
+    '<div class="ic ' + (isIn ? 'in' : 'out') + '">' + (isIn ? '💰' : '✂️') + '</div>' +
+    '<div class="body"><div class="t1">' + t1 + '</div><div class="t2">' + t2 + '</div></div>' +
+    '<div class="amt ' + (isIn ? 'in' : 'out') + '">' + (isIn ? '+' + money(r.amount) + ' 元' : '-' + (r.count||1) + ' 次') + '</div>' +
+    (withDelete ? '<button class="delrec" data-act="delrec" data-id="' + r.id + '" title="删除这条记录">✕</button>' : '') +
+  '</div>';
+}
+
+function flowView(){
+  var rs = state.records.slice().sort(function(a,b){
+    if(a.date !== b.date) return a.date < b.date ? 1 : -1;
+    return (b.ts||0) - (a.ts||0);
+  });
+  if(!rs.length) return '<div class="empty"><span class="em">🧾</span>还没有任何账单记录</div>';
+
+  var h = '', cur = '';
+  rs.forEach(function(r){
+    if(r.date !== cur){
+      cur = r.date;
+      var dayIn = 0, dayOut = 0;
+      rs.forEach(function(x){
+        if(x.date !== cur) return;
+        if(x.type === 'recharge') dayIn += Number(x.amount)||0;
+        else dayOut += Number(x.count)||0;
+      });
+      h += '<div class="daygroup"><div class="dayhead"><span>' + weekdayName(cur) + '</span>' +
+           '<span>收 ' + money(dayIn) + ' 元 · 剪 ' + dayOut + ' 次</span></div></div>';
+    }
+    h += '<div class="card" style="padding:4px 14px">' + recRow(r, false) + '</div>';
+  });
+  return h;
+}
+
+function stats(){
+  var t = todayStr(), m = t.slice(0,7);
+  var o = {
+    todayRecharge: 0, todayUse: 0,
+    monthRecharge: 0, monthUse: 0, monthCust: 0,
+    totalRecharge: 0, totalUse: 0
+  };
+  var seen = {};
+  for(var i=0;i<state.records.length;i++){
+    var r = state.records[i];
+    var amt = Number(r.amount) || 0, cnt = Number(r.count) || 0;
+    if(r.type === 'recharge'){
+      o.totalRecharge += amt;
+      if(r.date.slice(0,7) === m){ o.monthRecharge += amt; if(!seen[r.cid]){ seen[r.cid]=1; o.monthCust++; } }
+      if(r.date === t) o.todayRecharge += amt;
+    }else{
+      o.totalUse += cnt;
+      if(r.date.slice(0,7) === m) o.monthUse += cnt;
+      if(r.date === t) o.todayUse += cnt;
+    }
+  }
+  return o;
+}
+
+function statsView(){
+  var ms = allMembers();
+  var st = stats();
+  var remain = 0, oweCount = 0;
+  ms.forEach(function(x){ remain += Math.max(0, x.remain); });
+  oweCount = ms.filter(function(x){ return x.status === 'low' || x.status === 'empty' || x.status === 'expired'; }).length;
+
+  var h = '<div class="grid">' +
+    '<div class="stat"><div class="k">本月充值</div><div class="v num">' + money(st.monthRecharge) + '<small>元</small></div></div>' +
+    '<div class="stat"><div class="k">本月剪发</div><div class="v num">' + st.monthUse + '<small>次</small></div></div>' +
+    '<div class="stat"><div class="k">会员总数</div><div class="v num">' + state.customers.length + '<small>人</small></div></div>' +
+    '<div class="stat"><div class="k">待提醒</div><div class="v num">' + oweCount + '<small>人</small></div></div>' +
+  '</div>';
+
+  h += '<div class="card" style="margin-top:10px">' +
+    '<div class="kv"><span>本月新办卡</span><span class="num">' + st.monthCust + ' 人</span></div>' +
+    '<div class="kv"><span>客户手上剩余总次数</span><span class="num">' + remain + ' 次</span></div>' +
+    '<div class="kv"><span>累计充值</span><span class="num">' + money(st.totalRecharge) + ' 元</span></div>' +
+    '<div class="kv"><span>累计剪发</span><span class="num">' + st.totalUse + ' 次</span></div>' +
+    '<div class="kv"><span>今日充值 / 剪发</span><span class="num">' + money(st.todayRecharge) + ' 元 / ' + st.todayUse + ' 次</span></div>' +
+  '</div>';
+
+  h += '<div class="card">' +
+    '<div class="kv" style="padding-top:0"><span>平均每次实收</span><span class="num">' +
+      (st.totalUse ? money(st.totalRecharge / st.totalUse) : '—') + ' 元</span></div>' +
+    '<div class="tiny muted" style="margin-top:6px">= 累计充值 ÷ 累计剪发次数，用来判断卡卖得贵不贵。</div>' +
+  '</div>';
+  return h;
+}
+
+function settingsView(){
+  var n = state.records.length, c = state.customers.length;
+  var h = '';
+  h += '<div class="card">' +
+    '<b style="font-size:15px">数据备份（很重要）</b>' +
+    '<div class="tiny muted" style="margin:6px 0 12px;line-height:1.6">' +
+      '数据只存在这个浏览器里，换手机、清缓存都会丢。<b>建议每周导出一次</b>，把文件存到网盘或发到微信。' +
+      '在电脑上导入同一个文件，就能接着记账。' +
+    '</div>' +
+    '<button class="btn primary block" data-act="export" style="margin-bottom:9px">导出备份文件</button>' +
+    '<div class="btn-row">' +
+      '<button class="btn ghost" data-act="copy">复制备份文本</button>' +
+      '<button class="btn ghost" data-act="importfile">导入备份文件</button>' +
+    '</div>' +
+    '<input type="file" id="filein" accept=".json,application/json,text/plain" style="display:none">' +
+  '</div>';
+
+  h += '<div class="card">' +
+    '<b style="font-size:15px">粘贴导入</b>' +
+    '<div class="tiny muted" style="margin:6px 0 8px">把备份文本粘到这里，点「恢复」。</div>' +
+    '<textarea id="pastebox" rows="4" placeholder="粘贴备份 JSON…"></textarea>' +
+    '<button class="btn ghost block" data-act="pasteimport" style="margin-top:9px">恢复数据</button>' +
+  '</div>';
+
+  h += '<div class="card">' +
+    '<div class="kv"><span>会员数</span><span class="num">' + c + ' 人</span></div>' +
+    '<div class="kv"><span>记录条数</span><span class="num">' + n + ' 条</span></div>' +
+    '<div class="sep"></div>' +
+    '<button class="btn danger block" data-act="wipe">清空所有数据</button>' +
+    '<div class="tiny muted" style="margin-top:8px">清空后无法恢复，请先导出备份。</div>' +
+  '</div>';
+
+  h += '<div class="card tiny muted" style="line-height:1.75">' +
+    '<b style="color:#1c1c1e;font-size:14px">怎么用</b><br>' +
+    '1. 客人办卡 → 右上角「+ 新会员」，填姓名、手机号、充多少钱、送多少次、有效期。<br>' +
+    '2. 客人来剪发 → 点开这位客人，按绿色「剪一次（-1）」，剩余次数自动减 1。<br>' +
+    '3. 客人续卡 → 点「充值」，把新次数加进去，旧次数会累加。<br>' +
+    '4. 记错了 → 在客人的「消费记录」里点那一条右边的 ✕ 删掉，次数自动改回来。<br>' +
+    '5. 「流水」看全部账单，「统计」看本月收入。' +
+  '</div>';
+  return h;
+}
+
+/* ============ 五、弹层 ============ */
+function modalView(){
+  var md = ui.modal;
+  if(!md) return '';
+  var c = md.cid ? findCustomer(md.cid) : null;
+  var h = '';
+
+  if(md.kind === 'add' || md.kind === 'edit'){
+    var isAdd = md.kind === 'add';
+    h += '<h2>' + (isAdd ? '新会员 / 开卡' : '修改资料') + '</h2>';
+    h += '<div class="field"><label>姓名（必填）</label><input id="f_name" autocomplete="off" value="' + (isAdd ? '' : esc(c.name)) + '" placeholder="如：张三"></div>';
+    h += '<div class="field"><label>手机号</label><input id="f_phone" type="tel" inputmode="numeric" value="' + (isAdd ? '' : esc(c.phone||'')) + '" placeholder="可留空"></div>';
+    h += '<div class="field"><label>备注</label><input id="f_note" autocomplete="off" value="' + (isAdd ? '' : esc(c.note||'')) + '" placeholder="如：只剪板寸 / 老客户"></div>';
+
+    if(isAdd){
+      h += '<div class="sep"></div>';
+      h += '<div class="field-2">' +
+        '<div class="field"><label>充值金额（元）</label><input id="f_amount" type="number" inputmode="decimal" placeholder="如 300"></div>' +
+        '<div class="field"><label>给几次剪发</label><input id="f_count" type="number" inputmode="numeric" placeholder="如 10"></div>' +
+      '</div>';
+      h += '<div class="field-2">' +
+        '<div class="field"><label>开卡日期</label><input id="f_date" type="date" value="' + todayStr() + '"></div>' +
+        '<div class="field"><label>有效期至</label><input id="f_expire" type="date" value="' + addYears(todayStr(), 1) + '"></div>' +
+      '</div>';
+      h += '<div class="tiny muted" style="margin:-4px 0 12px">现在不充值也可以，先建个空档案，改天再点「充值」。</div>';
+    }
+    h += '<div class="actions">' +
+      '<button class="btn ghost" data-act="closemodal">取消</button>' +
+      '<button class="btn primary" data-act="submit" data-kind="' + md.kind + '">保存</button>' +
+    '</div>';
+    return h;
+  }
+
+  if(md.kind === 'recharge'){
+    h += '<h2>给「' + esc(c.name) + '」充值</h2>';
+    h += '<div class="field-2">' +
+      '<div class="field"><label>充值金额（元）</label><input id="f_amount" type="number" inputmode="decimal" placeholder="如 300"></div>' +
+      '<div class="field"><label>增加次数</label><input id="f_count" type="number" inputmode="numeric" placeholder="如 10"></div>' +
+    '</div>';
+    h += '<div class="field-2">' +
+      '<div class="field"><label>日期</label><input id="f_date" type="date" value="' + todayStr() + '"></div>' +
+      '<div class="field"><label>有效期至（可改）</label><input id="f_expire" type="date" value="' + (summarize(c).expire || addYears(todayStr(),1)) + '"></div>' +
+    '</div>';
+    h += '<div class="tiny muted" style="margin:-4px 0 12px">次数会累加到现有余额上。</div>';
+    h += '<div class="actions">' +
+      '<button class="btn ghost" data-act="closemodal">取消</button>' +
+      '<button class="btn primary" data-act="submit" data-kind="recharge">确认充值</button>' +
+    '</div>';
+    return h;
+  }
+  return '';
+}
+
+/* ============ 六、渲染 ============ */
+function fullRender(){
+  var root = document.getElementById('root');
+  if(!root) return;
+  var body = '';
+  if(ui.openId){ body = detailView(); }
+  else if(ui.tab === 'members'){ body = membersView(); }
+  else if(ui.tab === 'flow'){ body = flowView(); }
+  else if(ui.tab === 'stats'){ body = statsView(); }
+  else { body = settingsView(); }
+
+  if(!storageOK){
+    body = '<div class="banner" style="background:#fdecec;border-color:#f5b5b5;color:#a11">' +
+      '<b>这个打开方式不能保存数据</b><br>关掉后数据会丢。请在电脑上用浏览器打开这个文件。' +
+    '</div>' + body;
+  }
+
+  var navItems = [
+    ['members','👥','会员'], ['flow','🧾','流水'], ['stats','📊','统计'], ['settings','⚙️','设置']
+  ];
+  var nav = '<nav>';
+  navItems.forEach(function(it){
+    var on = (!ui.openId && ui.tab === it[0]) ? ' on' : '';
+    nav += '<button class="' + on.trim() + '" data-act="tab" data-tab="' + it[0] + '">' +
+           '<span class="ic">' + it[1] + '</span><span>' + it[2] + '</span></button>';
+  });
+  nav += '</nav>';
+
+  var overlay = '';
+  var mv = modalView();
+  if(mv){
+    overlay = '<div class="overlay" data-act="overlaytap"><div class="sheet" data-stop="1">' + mv + '</div></div>';
+  }
+
+  var keepQ = document.activeElement && document.activeElement.id === 'q';
+  var selStart = keepQ ? document.activeElement.selectionStart : 0;
+
+  root.innerHTML = topBar() + '<main>' + body + '</main>' + nav + overlay;
+
+  if(keepQ){
+    var qi = document.getElementById('q');
+    if(qi){ qi.focus(); try{ qi.setSelectionRange(selStart, selStart); }catch(e){} }
+  }
+  /* 打开弹层时自动聚焦第一个输入框 */
+  if(mv){
+    var first = document.querySelector('.sheet input');
+    if(first && !('ontouchstart' in window)) first.focus();
+  }
+}
+
+/* ============ 七、动作 ============ */
+function addRecord(cid, type, count, amount, date, expireDate){
+  state.records.push({
+    id: uid(), cid: cid, type: type,
+    count: Number(count) || 0, amount: Number(amount) || 0,
+    date: date || todayStr(), expireDate: (type === 'recharge' ? (expireDate || '') : ''),
+    ts: Date.now()
+  });
+}
+
+function doSubmit(kind){
+  var g = function(id){ var el = document.getElementById(id); return el ? el.value.trim() : ''; };
+
+  if(kind === 'add'){
+    var name = g('f_name');
+    if(!name){ alert('请填写姓名'); return; }
+    var c = { id: uid(), name: name, phone: g('f_phone'), note: g('f_note'), createdAt: new Date().toISOString() };
+    state.customers.push(c);
+    var amt = num(g('f_amount')), cnt = intNum(g('f_count'));
+    if(amt > 0 || cnt > 0){
+      addRecord(c.id, 'recharge', cnt, amt, g('f_date') || todayStr(), g('f_expire'));
+    }
+    ui.modal = null; ui.openId = c.id;
+    save(); fullRender(); return;
+  }
+
+  if(kind === 'edit'){
+    var c2 = findCustomer(ui.modal.cid);
+    if(!c2) return;
+    var nm = g('f_name');
+    if(!nm){ alert('请填写姓名'); return; }
+    c2.name = nm; c2.phone = g('f_phone'); c2.note = g('f_note');
+    ui.modal = null; save(); fullRender(); return;
+  }
+
+  if(kind === 'recharge'){
+    var c3 = findCustomer(ui.modal.cid);
+    if(!c3) return;
+    var a3 = num(g('f_amount')), n3 = intNum(g('f_count'));
+    if(a3 <= 0 && n3 <= 0){ alert('金额和次数至少填一个'); return; }
+    if(n3 <= 0){ n3 = 0; }
+    addRecord(c3.id, 'recharge', n3, a3, g('f_date') || todayStr(), g('f_expire'));
+    ui.modal = null; save(); fullRender(); return;
+  }
+}
+
+function downloadBackup(){
+  var data = JSON.stringify({ app: 'hairshop', version: 1, exportedAt: new Date().toISOString(), customers: state.customers, records: state.records }, null, 2);
+  try{
+    var blob = new Blob([data], { type: 'application/json' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = '理发店备份-' + todayStr() + '.json';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function(){ URL.revokeObjectURL(url); if(a.parentNode) a.parentNode.removeChild(a); }, 1500);
+  }catch(e){
+    alert('这台设备不支持直接下载，请用「复制备份文本」然后粘贴到备忘录保存。');
+  }
+}
+
+function copyBackup(){
+  var data = JSON.stringify({ app: 'hairshop', version: 1, exportedAt: new Date().toISOString(), customers: state.customers, records: state.records });
+  var done = function(){ alert('备份文本已复制。粘到备忘录或微信收藏里存好。'); };
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(data).then(done, function(){ fallbackCopy(data, done); });
+  }else{
+    fallbackCopy(data, done);
+  }
+}
+function fallbackCopy(text, done){
+  var ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed'; ta.style.opacity = '0';
+  document.body.appendChild(ta);
+  ta.select();
+  var ok = false;
+  try{ ok = document.execCommand('copy'); }catch(e){}
+  document.body.removeChild(ta);
+  if(ok) done(); else alert('复制失败，请用「导出备份文件」。');
+}
+
+function applyImport(text){
+  var s;
+  try{ s = JSON.parse(text); }catch(e){ alert('这段内容不是有效的备份文件'); return; }
+  if(!s || !Array.isArray(s.customers) || !Array.isArray(s.records)){ alert('备份内容格式不对'); return; }
+  if(!confirm('将用备份覆盖当前的 ' + state.customers.length + ' 位客户和 ' + state.records.length + ' 条记录，确定吗？')) return;
+  state = { customers: s.customers, records: s.records };
+  save(); ui.openId = null; ui.modal = null;
+  fullRender();
+  alert('已恢复：' + state.customers.length + ' 位客户，' + state.records.length + ' 条记录。');
+}
+
+document.addEventListener('click', function(ev){
+  var t = ev.target;
+  if(ev.target.classList && ev.target.classList.contains('overlay')){ ui.modal = null; fullRender(); return; }
+  var b = t && t.closest ? t.closest('[data-act]') : null;
+  if(!b) return;
+  var act = b.getAttribute('data-act');
+  if(act === 'overlaytap') return;   /* 点遮罩空白处关闭，由上面的判断处理 */
+
+  if(act === 'tab'){ ui.tab = b.getAttribute('data-tab'); ui.openId = null; fullRender(); return; }
+  if(act === 'back'){ ui.openId = null; fullRender(); return; }
+  if(act === 'open'){ ui.openId = b.getAttribute('data-id'); ui.tab = 'members'; fullRender(); return; }
+  if(act === 'add'){ ui.modal = { kind: 'add' }; fullRender(); return; }
+  if(act === 'edit'){ ui.modal = { kind: 'edit', cid: b.getAttribute('data-id') }; fullRender(); return; }
+  if(act === 'recharge'){ ui.modal = { kind: 'recharge', cid: b.getAttribute('data-id') }; fullRender(); return; }
+  if(act === 'closemodal'){ ui.modal = null; fullRender(); return; }
+  if(act === 'submit'){ doSubmit(b.getAttribute('data-kind')); return; }
+
+  if(act === 'use'){
+    var cid = b.getAttribute('data-id');
+    var c = findCustomer(cid);
+    if(!c) return;
+    var m = summarize(c);
+    if(m.status === 'expired' && !confirm('这位客户的卡在 ' + m.expire + ' 已过期，还要扣次数吗？')) return;
+    addRecord(cid, 'use', 1, 0, todayStr(), '');
+    save(); fullRender();
+    return;
+  }
+
+  if(act === 'delrec'){
+    var rid = b.getAttribute('data-id');
+    if(!confirm('删除这条记录？剩余次数会相应改回。')) return;
+    state.records = state.records.filter(function(r){ return r.id !== rid; });
+    save(); fullRender(); return;
+  }
+
+  if(act === 'delcus'){
+    var did = b.getAttribute('data-id');
+    var cu = findCustomer(did);
+    if(!cu) return;
+    if(!confirm('删除「' + cu.name + '」和他的全部记录？此操作不可恢复。')) return;
+    state.customers = state.customers.filter(function(x){ return x.id !== did; });
+    state.records = state.records.filter(function(r){ return r.cid !== did; });
+    ui.openId = null; save(); fullRender(); return;
+  }
+
+  if(act === 'export'){ downloadBackup(); return; }
+  if(act === 'copy'){ copyBackup(); return; }
+  if(act === 'importfile'){ var fi = document.getElementById('filein'); if(fi) fi.click(); return; }
+  if(act === 'pasteimport'){
+    var ta = document.getElementById('pastebox');
+    if(!ta || !ta.value.trim()){ alert('请先粘贴备份文本'); return; }
+    applyImport(ta.value.trim()); return;
+  }
+  if(act === 'wipe'){
+    if(!confirm('确定清空全部数据？建议先导出备份。')) return;
+    if(!confirm('再确认一次：' + state.customers.length + ' 位客户、' + state.records.length + ' 条记录将被删除。')) return;
+    state = { customers: [], records: [] };
+    save(); ui.openId = null; ui.tab = 'members'; fullRender(); return;
+  }
+});
+
+document.addEventListener('change', function(ev){
+  if(ev.target && ev.target.id === 'filein'){
+    var f = ev.target.files && ev.target.files[0];
+    if(!f) return;
+    var rd = new FileReader();
+    rd.onload = function(){ applyImport(String(rd.result || '')); };
+    rd.readAsText(f);
+  }
+  if(ev.target && ev.target.id === 'f_date'){ /* 日期改动无需重绘 */ }
+});
+
+/* 搜索输入 */
+document.addEventListener('input', function(ev){
+  if(ev.target && ev.target.id === 'q'){
+    ui.q = ev.target.value;
+    var root = document.getElementById('root');
+    if(!root) return;
+    /* 只重绘列表区，保持输入焦点 */
+    var list = allMembers();
+    var k = ui.q.trim().toLowerCase();
+    if(k){
+      list = list.filter(function(m){
+        return (m.name||'').toLowerCase().indexOf(k) >= 0 || (m.phone||'').indexOf(k) >= 0;
+      });
+    }
+    list.sort(function(a,b){ return a.sortKey < b.sortKey ? 1 : a.sortKey > b.sortKey ? -1 : 0; });
+    var main = document.querySelector('main');
+    if(main){
+      var old = main.querySelectorAll('.member, .empty');
+      for(var i=0;i<old.length;i++) old[i].remove();
+      var html = '';
+      if(!list.length){
+        html = '<div class="empty"><span class="em">🔍</span>没找到匹配的客户</div>';
+      }else{
+        list.forEach(function(m){
+          html = html + '<button class="member" data-act="open" data-id="' + m.id + '">' +
+            '<div class="m-top"><span class="m-name">' + esc(m.name) + (m.phone ? ' <span class="m-phone">' + esc(m.phone) + '</span>' : '') + '</span>' +
+            '<span class="pill ' + m.status + '">' + statusLabel(m.status) + '</span></div>' +
+            '<div class="m-mid"><div class="m-big num">' + (m.status === 'none' ? '—' : m.remain) +
+            '<small>' + (m.status === 'none' ? '' : '次可用') + '</small></div>' +
+            '<div class="m-meta">共 ' + m.total + ' 次 · 充值 ' + money(m.amount) + ' 元' +
+            (m.expire ? '<br>到期 ' + m.expire : '') + '</div></div></button>';
+        });
+      }
+      main.insertAdjacentHTML('beforeend', html);
+    }
+  }
+});
+
+/* ============ 八、自检与启动 ============ */
+function fatal(msg){
+  var d = document.getElementById('fatal');
+  if(!d){
+    d = document.createElement('div');
+    d.id = 'fatal';
+    d.style.cssText = 'position:fixed;inset:0;z-index:999;background:#fff;padding:24px;font-size:14px;line-height:1.7;color:#a11;overflow:auto';
+    document.body.appendChild(d);
+  }
+  d.innerHTML = '<b style="font-size:16px">页面出错了</b><br><br>' +
+    '把下面这句话截图发给我，我就能改好：<br>' +
+    '<code style="display:block;background:#f4f4f7;padding:10px;border-radius:8px;margin-top:8px;color:#333;word-break:break-all">' +
+    String(msg).replace(/[<>&]/g, '') + '</code>';
+  d.style.display = 'block';
+  var fb = document.getElementById('fallback');
+  if(fb) fb.style.display = 'none';
+}
+
+if(typeof document !== 'undefined' && document.getElementById('root')){
+  try{
+    fullRender();
+    var fb0 = document.getElementById('fallback');
+    if(fb0) fb0.style.display = 'none';   /* 只要 JS 跑起来了就撤掉兜底提示 */
+  }catch(e){
+    fatal((e && (e.stack || e.message)) || e);
+  }
+  window.addEventListener('error', function(ev){
+    fatal(ev.message + ' @' + (ev.lineno || '') + ':' + (ev.colno || ''));
+  });
+}
+if(typeof module !== 'undefined' && module.exports){
+  module.exports = { summarize: summarize, stats: stats, state: state, addRecord: addRecord, money: money, daysBetween: daysBetween };
+}
+</script>
+</body>
+</html>
