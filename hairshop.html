@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="theme-color" content="#eaf1fb">
-<title>理发店会员本</title>
+<title>云想Hairsalon</title>
 <style>
   :root{
     --ink:#18202e; --ink2:#5b6474; --ink3:#9aa3b3;
@@ -282,7 +282,7 @@
 <div id="root"></div>
 <div id="fallback">
   <div class="fb-card">
-    <div class="fb-title">理发店会员本</div>
+    <div class="fb-title">云想Hairsalon</div>
     <div class="fb-sub fb-dots">正在加载</div>
     <div class="fb-tip">
       如果这行字停留超过 3 秒，说明<b>当前打开方式只显示网页、不执行 JavaScript</b>，
@@ -439,7 +439,7 @@ var ui = { tab: 'members', q: '', openId: null, modal: null };
 function topBar(){
   var st = stats();
   return '<header>' +
-    '<div class="row"><h1>' + (ui.openId ? '会员详情' : '💈 理发店会员本') + '</h1>' +
+    '<div class="row"><h1>' + (ui.openId ? '会员详情' : '💈 云想Hairsalon') + '</h1>' +
     (ui.openId ? '<button class="linkbtn" data-act="back">返回</button>' :
       '<button class="linkbtn" data-act="add">+ 新会员</button>') +
     '</div>' +
@@ -684,6 +684,9 @@ function settingsView(){
     '3. 客人续卡 → 点「充值」，把新次数加进去，旧次数会累加。<br>' +
     '4. 记错了 → 在客人的「消费记录」里点那一条右边的 ✕ 删掉，次数自动改回来。<br>' +
     '5. 「流水」看全部账单，「统计」看本月收入。' +
+    '<div style="margin-top:12px;padding-top:10px;border-top:1px solid rgba(255,255,255,.55)">' +
+      '版本 <b style="color:#2563eb">v3</b> · 2026-11-18' +
+    '</div>' +
   '</div>';
   return h;
 }
