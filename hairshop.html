@@ -102,7 +102,7 @@
 
   /* 会员卡 */
   .member{
-    position:relative;display:block;width:100%;text-align:left;
+    position:relative;overflow:hidden;display:block;width:100%;text-align:left;
     background:var(--glass);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);
     border:1px solid var(--edge);border-radius:24px;padding:15px 17px;margin:0 0 11px;
     box-shadow:var(--shadow), var(--hi);cursor:pointer;font:inherit;color:inherit;
@@ -132,6 +132,7 @@
 
   /* 按钮 */
   .btn{
+    position:relative;overflow:hidden;
     display:inline-flex;align-items:center;justify-content:center;gap:7px;
     border:0;border-radius:16px;padding:12px 18px;font:inherit;font-weight:800;font-size:15px;
     cursor:pointer;text-decoration:none;transition:transform .1s, box-shadow .15s;
@@ -182,24 +183,73 @@
   .stat .v{font-size:27px;font-weight:800;margin-top:6px;font-variant-numeric:tabular-nums;color:var(--ink)}
   .stat .v small{font-size:13px;font-weight:500;color:var(--ink3);margin-left:3px}
 
-  /* 底部导航（悬浮玻璃条） */
+  /* 底部导航（流动液态玻璃） */
   nav{
-    position:fixed;left:12px;right:12px;bottom:calc(10px + env(safe-area-inset-bottom));z-index:30;display:flex;
-    background:rgba(255,255,255,.62);
-    -webkit-backdrop-filter:blur(26px) saturate(180%);backdrop-filter:blur(26px) saturate(180%);
-    border:1px solid var(--edge);border-radius:26px;
-    box-shadow:0 14px 40px rgba(31,54,86,.20), var(--hi);
+    position:fixed;left:12px;right:12px;bottom:calc(10px + env(safe-area-inset-bottom));z-index:30;
+    padding:5px;border-radius:28px;overflow:hidden;
+    background:rgba(255,255,255,.55);
+    -webkit-backdrop-filter:blur(26px) saturate(185%);backdrop-filter:blur(26px) saturate(185%);
+    border:1px solid var(--edge);
+    box-shadow:0 16px 44px rgba(31,54,86,.22), var(--hi);
   }
+  /* 流动的光泽，缓缓扫过整条导航 */
+  nav::before{
+    content:'';position:absolute;inset:0;pointer-events:none;border-radius:28px;
+    background:linear-gradient(105deg, rgba(255,255,255,0) 32%, rgba(255,255,255,.55) 47%, rgba(255,255,255,0) 62%);
+    background-size:260% 100%;
+    animation:navflow 7s linear infinite;
+  }
+  @keyframes navflow{0%{background-position:135% 0}100%{background-position:-135% 0}}
+
+  .nav-inner{position:relative;display:flex}
+  /* 流动的玻璃镜头：随当前标签滑动 */
+  .nav-lens{
+    position:absolute;top:2px;bottom:2px;left:0;width:25%;border-radius:23px;
+    background:linear-gradient(160deg, rgba(255,255,255,.92), rgba(255,255,255,.55));
+    border:1px solid rgba(255,255,255,.9);
+    box-shadow:0 6px 18px rgba(31,54,86,.18), inset 0 1px 0 #fff, inset 0 -3px 8px rgba(37,99,235,.10);
+    transition:transform .5s cubic-bezier(.34,1.4,.5,1), opacity .25s;
+    z-index:0;pointer-events:none;
+  }
+  .nav-lens::after{
+    content:'';position:absolute;inset:0;border-radius:23px;
+    background:radial-gradient(120% 65% at 50% 0%, rgba(37,99,235,.18), transparent 72%);
+    animation:lenspulse 4.5s ease-in-out infinite;
+  }
+  @keyframes lenspulse{0%,100%{opacity:.5}50%{opacity:1}}
+
   nav button{
-    flex:1;border:0;background:none;padding:8px 0 9px;font-size:11px;color:var(--ink3);
+    position:relative;z-index:1;flex:1;border:0;background:none;padding:9px 0 10px;font-size:11px;color:var(--ink3);
     display:flex;flex-direction:column;align-items:center;gap:3px;font-family:inherit;cursor:pointer;
+    overflow:hidden;border-radius:22px;
   }
   nav .ic{
     width:38px;height:28px;display:flex;align-items:center;justify-content:center;
-    font-size:20px;line-height:1;border-radius:12px;transition:background .15s, color .15s;
+    font-size:20px;line-height:1;border-radius:12px;transition:transform .28s cubic-bezier(.34,1.4,.5,1);
   }
   nav button.on{color:var(--brand);font-weight:800}
-  nav button.on .ic{background:rgba(37,99,235,.15)}
+  nav button.on .ic{transform:scale(1.1)}
+
+  /* 按压涟漪 */
+  .ripple{
+    position:absolute;border-radius:50%;pointer-events:none;
+    background:radial-gradient(circle, currentColor 0%, transparent 65%);
+    opacity:.22;transform:translate(-50%,-50%) scale(0);
+    animation:rip .55s cubic-bezier(.22,.61,.36,1) forwards;
+  }
+  @keyframes rip{to{transform:translate(-50%,-50%) scale(1);opacity:0}}
+
+  /* 开关 */
+  .switch{
+    width:52px;height:32px;border-radius:16px;border:0;flex:0 0 52px;position:relative;cursor:pointer;
+    background:rgba(120,132,152,.32);transition:background .22s;
+  }
+  .switch::after{
+    content:'';position:absolute;top:3px;left:3px;width:26px;height:26px;border-radius:50%;background:#fff;
+    box-shadow:0 2px 6px rgba(0,0,0,.22);transition:transform .24s cubic-bezier(.34,1.56,.64,1);
+  }
+  .switch.on{background:var(--green)}
+  .switch.on::after{transform:translateX(20px)}
 
   /* 弹层 */
   .overlay{position:fixed;inset:0;z-index:50;background:rgba(20,30,50,.35);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);display:flex;align-items:flex-end;justify-content:center}
@@ -340,6 +390,68 @@ function num(v){
 function intNum(v){
   var n = parseInt(String(v).replace(/[^\d\-]/g, ''), 10);
   return isNaN(n) ? 0 : n;
+}
+
+/* ---------- 按键音效（Web Audio，合成音，无需音频文件） ---------- */
+var Sound = (function(){
+  var ctx = null;
+  var on = true;
+  try{ on = localStorage.getItem('hairshop.sound') !== '0'; }catch(e){}
+
+  function ensure(){
+    if(!ctx){
+      var AC = window.AudioContext || window.webkitAudioContext;
+      if(!AC) return null;
+      try{ ctx = new AC(); }catch(e){ return null; }
+    }
+    if(ctx.state === 'suspended'){ try{ ctx.resume(); }catch(e){} }
+    return ctx;
+  }
+  function tone(freq, dur, type, vol){
+    if(!on) return;
+    var c = ensure();
+    if(!c) return;
+    try{
+      var o = c.createOscillator(), g = c.createGain();
+      o.type = type || 'sine';
+      o.frequency.value = freq;
+      o.connect(g); g.connect(c.destination);
+      var t = c.currentTime;
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(vol, t + 0.008);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      o.start(t); o.stop(t + dur + 0.02);
+    }catch(e){}
+  }
+  return {
+    tap: function(){ tone(920, 0.05, 'sine', 0.035); },
+    ok:  function(){ tone(680, 0.07, 'sine', 0.05); setTimeout(function(){ tone(1020, 0.09, 'sine', 0.04); }, 60); },
+    isOn: function(){ return on; },
+    setOn: function(v){ on = !!v; try{ localStorage.setItem('hairshop.sound', on ? '1' : '0'); }catch(e){} if(on) ensure(); }
+  };
+})();
+
+/* ---------- 按压涟漪 ---------- */
+function rippleAt(ev, el){
+  try{
+    var rect = el.getBoundingClientRect();
+    var x = (typeof ev.clientX === 'number' && ev.clientX ? ev.clientX : rect.left + rect.width / 2) - rect.left;
+    var y = (typeof ev.clientY === 'number' && ev.clientY ? ev.clientY : rect.top + rect.height / 2) - rect.top;
+    var size = Math.max(rect.width, rect.height) * 1.8;
+    var r = document.createElement('span');
+    r.className = 'ripple';
+    r.style.left = x + 'px';
+    r.style.top = y + 'px';
+    r.style.width = size + 'px';
+    r.style.height = size + 'px';
+    el.appendChild(r);
+    setTimeout(function(){ if(r.parentNode) r.parentNode.removeChild(r); }, 560);
+  }catch(e){}
+}
+
+/* ---------- 触感反馈（iOS Safari 不支持，安卓/Chrome 有效） ---------- */
+function haptic(ms){
+  try{ if(navigator.vibrate) navigator.vibrate(ms || 8); }catch(e){}
 }
 
 /* ============ 二、数据层 ============ */
@@ -649,6 +761,15 @@ function settingsView(){
   var n = state.records.length, c = state.customers.length;
   var h = '';
   h += '<div class="card">' +
+    '<div style="display:flex;align-items:center;justify-content:space-between;gap:12px">' +
+      '<div>' +
+        '<div style="font-weight:800;font-size:15px">按键音效</div>' +
+        '<div class="tiny muted" style="margin-top:3px">点按钮时的「嗒」声和按压反馈</div>' +
+      '</div>' +
+      '<button type="button" class="switch' + (Sound.isOn() ? ' on' : '') + '" data-act="togsound" aria-label="音效开关"></button>' +
+    '</div>' +
+  '</div>';
+  h += '<div class="card">' +
     '<b style="font-size:15px">数据备份（很重要）</b>' +
     '<div class="tiny muted" style="margin:6px 0 12px;line-height:1.6">' +
       '数据只存在这个浏览器里，换手机、清缓存都会丢。<b>建议每周导出一次</b>，把文件存到网盘或发到微信。' +
@@ -685,7 +806,7 @@ function settingsView(){
     '4. 记错了 → 在客人的「消费记录」里点那一条右边的 ✕ 删掉，次数自动改回来。<br>' +
     '5. 「流水」看全部账单，「统计」看本月收入。' +
     '<div style="margin-top:12px;padding-top:10px;border-top:1px solid rgba(255,255,255,.55)">' +
-      '版本 <b style="color:#2563eb">v3</b> · 2026-11-18' +
+      '版本 <b style="color:#2563eb">v4</b> · 2026-11-18' +
     '</div>' +
   '</div>';
   return h;
@@ -744,6 +865,48 @@ function modalView(){
   return '';
 }
 
+/* ============ 五之二、底部导航（流动液态玻璃） ============ */
+var NAV_ITEMS = [['members','👥','会员'], ['flow','🧾','流水'], ['stats','📊','统计'], ['settings','⚙️','设置']];
+
+function navIndex(){
+  if(ui.openId) return -1;
+  for(var i=0;i<NAV_ITEMS.length;i++){
+    if(NAV_ITEMS[i][0] === ui.tab) return i;
+  }
+  return 0;
+}
+/* 导航只创建一次，之后只更新状态 —— 这样玻璃镜头才能平滑滑动 */
+function ensureNav(){
+  var nav = document.getElementById('bottomnav');
+  if(nav) return nav;
+  nav = document.createElement('nav');
+  nav.id = 'bottomnav';
+  var h = '<div class="nav-inner"><div class="nav-lens"></div>';
+  for(var i=0;i<NAV_ITEMS.length;i++){
+    var it = NAV_ITEMS[i];
+    h += '<button type="button" data-act="tab" data-tab="' + it[0] + '">' +
+         '<span class="ic">' + it[1] + '</span><span>' + it[2] + '</span></button>';
+  }
+  h += '</div>';
+  nav.innerHTML = h;
+  document.body.appendChild(nav);
+  return nav;
+}
+function syncNav(){
+  var nav = ensureNav();
+  var idx = navIndex();
+  var btns = nav.querySelectorAll('button');
+  for(var i=0;i<btns.length;i++){
+    if(i === idx){ btns[i].classList.add('on'); } else { btns[i].classList.remove('on'); }
+  }
+  var lens = nav.querySelector('.nav-lens');
+  if(!lens) return;
+  if(idx < 0){ lens.style.opacity = '0'; return; }
+  lens.style.opacity = '1';
+  lens.style.width = (100 / NAV_ITEMS.length) + '%';
+  lens.style.transform = 'translateX(' + (idx * 100) + '%)';
+}
+
 /* ============ 六、渲染 ============ */
 function fullRender(){
   var root = document.getElementById('root');
@@ -761,17 +924,6 @@ function fullRender(){
     '</div>' + body;
   }
 
-  var navItems = [
-    ['members','👥','会员'], ['flow','🧾','流水'], ['stats','📊','统计'], ['settings','⚙️','设置']
-  ];
-  var nav = '<nav>';
-  navItems.forEach(function(it){
-    var on = (!ui.openId && ui.tab === it[0]) ? ' on' : '';
-    nav += '<button class="' + on.trim() + '" data-act="tab" data-tab="' + it[0] + '">' +
-           '<span class="ic">' + it[1] + '</span><span>' + it[2] + '</span></button>';
-  });
-  nav += '</nav>';
-
   var overlay = '';
   var mv = modalView();
   if(mv){
@@ -781,7 +933,8 @@ function fullRender(){
   var keepQ = document.activeElement && document.activeElement.id === 'q';
   var selStart = keepQ ? document.activeElement.selectionStart : 0;
 
-  root.innerHTML = topBar() + '<main>' + body + '</main>' + nav + overlay;
+  root.innerHTML = topBar() + '<main>' + body + '</main>' + overlay;
+  syncNav();
 
   if(keepQ){
     var qi = document.getElementById('q');
@@ -896,6 +1049,12 @@ document.addEventListener('click', function(ev){
   var act = b.getAttribute('data-act');
   if(act === 'overlaytap') return;   /* 点遮罩空白处关闭，由上面的判断处理 */
 
+  /* 按压反馈：音效 + 涟漪 + 触感 */
+  Sound.tap();
+  haptic(7);
+  rippleAt(ev, b);
+
+  if(act === 'togsound'){ Sound.setOn(!Sound.isOn()); if(Sound.isOn()) Sound.ok(); fullRender(); return; }
   if(act === 'tab'){ ui.tab = b.getAttribute('data-tab'); ui.openId = null; fullRender(); return; }
   if(act === 'back'){ ui.openId = null; fullRender(); return; }
   if(act === 'open'){ ui.openId = b.getAttribute('data-id'); ui.tab = 'members'; fullRender(); return; }
@@ -912,6 +1071,7 @@ document.addEventListener('click', function(ev){
     var m = summarize(c);
     if(m.status === 'expired' && !confirm('这位客户的卡在 ' + m.expire + ' 已过期，还要扣次数吗？')) return;
     addRecord(cid, 'use', 1, 0, todayStr(), '');
+    Sound.ok(); haptic(18);   /* 扣次成功的提示音 */
     save(); fullRender();
     return;
   }
