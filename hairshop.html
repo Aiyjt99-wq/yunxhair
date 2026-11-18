@@ -187,6 +187,7 @@
   nav{
     position:fixed;left:12px;right:12px;bottom:calc(10px + env(safe-area-inset-bottom));z-index:30;
     padding:5px;border-radius:28px;overflow:hidden;
+    -webkit-user-select:none;user-select:none;
     background:rgba(255,255,255,.55);
     -webkit-backdrop-filter:blur(26px) saturate(185%);backdrop-filter:blur(26px) saturate(185%);
     border:1px solid var(--edge);
@@ -201,7 +202,11 @@
   }
   @keyframes navflow{0%{background-position:135% 0}100%{background-position:-135% 0}}
 
-  .nav-inner{position:relative;display:flex}
+  .nav-inner{position:relative;display:flex;touch-action:pan-y}
+  /* 拖拽时的镜头状态 */
+  nav.dragging .nav-lens{transition:none}
+  nav.dragging .nav-lens::after{animation-duration:1.1s}
+  nav.dragging{cursor:grabbing}
   /* 流动的玻璃镜头：随当前标签滑动 */
   .nav-lens{
     position:absolute;top:2px;bottom:2px;left:0;width:25%;border-radius:23px;
@@ -806,7 +811,7 @@ function settingsView(){
     '4. 记错了 → 在客人的「消费记录」里点那一条右边的 ✕ 删掉，次数自动改回来。<br>' +
     '5. 「流水」看全部账单，「统计」看本月收入。' +
     '<div style="margin-top:12px;padding-top:10px;border-top:1px solid rgba(255,255,255,.55)">' +
-      '版本 <b style="color:#2563eb">v4</b> · 2026-11-18' +
+      '版本 <b style="color:#2563eb">v5</b> · 2026-11-18' +
     '</div>' +
   '</div>';
   return h;
@@ -890,6 +895,10 @@ function ensureNav(){
   h += '</div>';
   nav.innerHTML = h;
   document.body.appendChild(nav);
+  nav.addEventListener('pointerdown', navPointerDown);
+  nav.addEventListener('pointermove', navPointerMove);
+  nav.addEventListener('pointerup', navPointerUp);
+  nav.addEventListener('pointercancel', navPointerUp);
   return nav;
 }
 function syncNav(){
@@ -905,6 +914,79 @@ function syncNav(){
   lens.style.opacity = '1';
   lens.style.width = (100 / NAV_ITEMS.length) + '%';
   lens.style.transform = 'translateX(' + (idx * 100) + '%)';
+}
+
+/* ---------- 导航镜头：可左右拖动，松手吸附到最近的标签 ---------- */
+var navDrag = { on:false, x0:0, w:0, left0:0, moved:false, near:0 };
+var navSuppressClick = false;
+
+function navLens(){
+  var nav = document.getElementById('bottomnav');
+  return nav ? nav.querySelector('.nav-lens') : null;
+}
+function navSegmentWidth(){
+  var nav = document.getElementById('bottomnav');
+  var inner = nav && nav.querySelector('.nav-inner');
+  if(!inner) return 0;
+  return inner.clientWidth / NAV_ITEMS.length;
+}
+function navPointerDown(ev){
+  if(ev.button != null && ev.button !== 0) return;
+  var nav = document.getElementById('bottomnav');
+  var idx = navIndex();
+  if(!nav || ui.openId || idx < 0) return;
+  var lens = navLens();
+  if(!lens) return;
+  navDrag.on = true;
+  navDrag.moved = false;
+  navDrag.x0 = ev.clientX;
+  navDrag.w = navSegmentWidth();
+  navDrag.left0 = idx * navDrag.w;
+  navDrag.near = idx;
+  nav.classList.add('dragging');
+  try{ nav.setPointerCapture(ev.pointerId); }catch(e){}
+}
+function navPointerMove(ev){
+  if(!navDrag.on || !navDrag.w) return;
+  var lens = navLens();
+  if(!lens) return;
+  var dx = ev.clientX - navDrag.x0;
+  if(!navDrag.moved && Math.abs(dx) < 6) return;
+  navDrag.moved = true;
+  var max = navDrag.w * (NAV_ITEMS.length - 1);
+  var left = navDrag.left0 + dx;
+  if(left < 0) left = 0;
+  if(left > max) left = max;
+  lens.style.transition = 'none';
+  lens.style.transform = 'translateX(' + left + 'px)';
+  /* 每滑过一个标签，轻轻一震（安卓有效） */
+  var near = Math.round(left / Math.max(1, navDrag.w));
+  if(near !== navDrag.near){ navDrag.near = near; haptic(4); }
+  if(ev.cancelable) ev.preventDefault();
+}
+function navPointerUp(){
+  if(!navDrag.on) return;
+  navDrag.on = false;
+  var nav = document.getElementById('bottomnav');
+  if(nav) nav.classList.remove('dragging');
+  var lens = navLens();
+  if(!lens) return;
+  lens.style.transition = '';
+  if(!navDrag.moved){ return; }   /* 只是点了一下，交给下面的 click 处理 */
+  navSuppressClick = true;
+  setTimeout(function(){ navSuppressClick = false; }, 400);
+  var m = lens.style.transform.match(/translateX\(([-\d.]+)px\)/);
+  var left = m ? parseFloat(m[1]) : navDrag.left0;
+  var idx = Math.round(left / Math.max(1, navDrag.w));
+  if(idx < 0) idx = 0;
+  if(idx > NAV_ITEMS.length - 1) idx = NAV_ITEMS.length - 1;
+  lens.style.transform = 'translateX(' + (idx * 100) + '%)';
+  if(NAV_ITEMS[idx][0] !== ui.tab){
+    ui.tab = NAV_ITEMS[idx][0];
+    ui.openId = null;
+    Sound.tap(); haptic(8);
+    fullRender();
+  }
 }
 
 /* ============ 六、渲染 ============ */
@@ -1042,6 +1124,7 @@ function applyImport(text){
 }
 
 document.addEventListener('click', function(ev){
+  if(navSuppressClick){ navSuppressClick = false; return; }   /* 刚拖完，忽略这次点击 */
   var t = ev.target;
   if(ev.target.classList && ev.target.classList.contains('overlay')){ ui.modal = null; fullRender(); return; }
   var b = t && t.closest ? t.closest('[data-act]') : null;
